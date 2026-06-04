@@ -16,13 +16,13 @@ import { APP_NAME, APP_TAGLINE, ROLES, ROUTES } from '../../utils/constants.js'
 import { normalizeRole } from '../../utils/roleGuard.js'
 
 const navigationByRole = {
-  [ROLES.MEDICO]: [
+  [ROLES.ADMIN]: [
     { label: 'Dashboard', path: ROUTES.dashboard, icon: <FiHome /> },
     { label: 'Consultas', path: ROUTES.consultas, icon: <FiClipboard /> },
     { label: 'Pacientes', path: ROUTES.pacientes, icon: <FiUsers /> },
     { label: 'Personal', path: ROUTES.personal, icon: <FiUser /> },
     { label: 'Empresas', path: ROUTES.empresas, icon: <FiBriefcase /> },
-    { label: 'Protocolos', path: ROUTES.protocolos, icon: <FiFileText /> },
+    // { label: 'Protocolos', path: ROUTES.protocolos, icon: <FiFileText /> },
     { label: 'Configuración', path: ROUTES.configuracion, icon: <FiSettings /> },
   ],
   [ROLES.BIOLOGO]: [
@@ -47,7 +47,7 @@ const navigationByRole = {
   ],
 }
 
-const defaultNavigation = navigationByRole[ROLES.MEDICO]
+const defaultNavigation = navigationByRole[ROLES.ADMIN]
 
 export default function Sidebar({ isOpen, onClose }) {
   const { rol } = useAuth()

@@ -92,19 +92,19 @@ function App() {
         <Route path={ROUTES.consultaDetalle()} element={<ConsultaDetallePage />} />
         <Route path={ROUTES.consultaNueva} element={<ConsultaFormPage />} />
         <Route path={ROUTES.consultaEditar()} element={<ConsultaFormPage />} />
-        <Route path={ROUTES.pacientes} element={<ProtectedRoute allowedRoles={[ROLES.MEDICO]}><PacientesPage /></ProtectedRoute>} />
-        <Route path={ROUTES.pacienteHistorial()} element={<ProtectedRoute allowedRoles={[ROLES.MEDICO]}><PacienteHistorialPage /></ProtectedRoute>} />
-        <Route path={ROUTES.personal} element={<ProtectedRoute allowedRoles={[ROLES.MEDICO]}><PersonalPage /></ProtectedRoute>} />
-        <Route path={ROUTES.personalNuevo} element={<ProtectedRoute allowedRoles={[ROLES.MEDICO]}><PersonalFormPage /></ProtectedRoute>} />
-        <Route path={ROUTES.personalEditar()} element={<ProtectedRoute allowedRoles={[ROLES.MEDICO]}><PersonalFormPage /></ProtectedRoute>} />
-        <Route path={ROUTES.empresas} element={<ProtectedRoute allowedRoles={[ROLES.MEDICO, ROLES.ADMIN, ROLES.CLIENTE]}><EmpresasPage /></ProtectedRoute>} />
-        <Route path={ROUTES.protocolos} element={<ProtectedRoute allowedRoles={[ROLES.MEDICO, ROLES.BIOLOGO, ROLES.ENFERMERO]}><ProtocolosPage /></ProtectedRoute>} />
-        <Route path={ROUTES.protocoloNuevo} element={<ProtectedRoute allowedRoles={[ROLES.MEDICO]}><ProtocoloFormPage /></ProtectedRoute>} />
-        <Route path={ROUTES.protocoloEditar()} element={<ProtectedRoute allowedRoles={[ROLES.MEDICO]}><ProtocoloFormPage /></ProtectedRoute>} />
+        <Route path={ROUTES.pacientes} element={<ProtectedRoute allowedRoles={[ROLES.ADMIN]}><PacientesPage /></ProtectedRoute>} />
+        <Route path={ROUTES.pacienteHistorial()} element={<ProtectedRoute allowedRoles={[ROLES.ADMIN]}><PacienteHistorialPage /></ProtectedRoute>} />
+        <Route path={ROUTES.personal} element={<ProtectedRoute allowedRoles={[ROLES.ADMIN]}><PersonalPage /></ProtectedRoute>} />
+        <Route path={ROUTES.personalNuevo} element={<ProtectedRoute allowedRoles={[ROLES.ADMIN]}><PersonalFormPage /></ProtectedRoute>} />
+        <Route path={ROUTES.personalEditar()} element={<ProtectedRoute allowedRoles={[ROLES.ADMIN]}><PersonalFormPage /></ProtectedRoute>} />
+        <Route path={ROUTES.empresas} element={<ProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.CLIENTE]}><EmpresasPage /></ProtectedRoute>} />
+        <Route path={ROUTES.protocolos} element={<ProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.BIOLOGO, ROLES.ENFERMERO]}><ProtocolosPage /></ProtectedRoute>} />
+        <Route path={ROUTES.protocoloNuevo} element={<ProtectedRoute allowedRoles={[ROLES.ADMIN]}><ProtocoloFormPage /></ProtectedRoute>} />
+        <Route path={ROUTES.protocoloEditar()} element={<ProtectedRoute allowedRoles={[ROLES.ADMIN]}><ProtocoloFormPage /></ProtectedRoute>} />
         <Route
           path={ROUTES.configuracion}
           element={
-            <ProtectedRoute allowedRoles={[ROLES.MEDICO]}>
+            <ProtectedRoute allowedRoles={[ROLES.ADMIN]}>
               <ConfiguracionPage />
             </ProtectedRoute>
           }

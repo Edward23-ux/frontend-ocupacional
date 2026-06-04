@@ -10,6 +10,7 @@ import Table from '../../components/common/Table.jsx'
 import { useConsultas } from '../../hooks/useConsultas.js'
 import { formatDate } from '../../utils/formatDate.js'
 import { ROUTES } from '../../utils/constants.js'
+import Avatar from '../../components/common/Avatar.jsx'
 
 const normalizeText = (value) => (value ?? '').toString().toLowerCase()
 
@@ -67,10 +68,15 @@ export default function ConsultasPage() {
   }
 
   const columns = [
-    { header: '#', accessor: 'id' },
     {
       header: 'Paciente',
       accessor: (row) => getPacienteName(row),
+      render: (value, row) => (
+            <div className="person-cell">
+              <Avatar name={value} />
+              <strong>{value || 'Sin nombre'}</strong>
+            </div>
+          ),
     },
     {
       header: 'Fecha',
@@ -115,10 +121,10 @@ export default function ConsultasPage() {
       </header>
 
       <section className="filters-bar">
+        <label className="field field--inline field--search"><span>Búsqueda</span><input value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="Buscar por nombre" /></label>
         <label className="field field--inline field--select">
           <span>Filtrar estado</span>
           <div className="select-wrapper">
-            <FiFilter />
             <select value={estadoFiltro} onChange={(event) => setEstadoFiltro(event.target.value)}>
               {estadosDisponibles.map((estado) => (
                 <option key={estado} value={estado}>{estado === 'TODOS' ? 'Todos' : estado}</option>
@@ -139,7 +145,7 @@ export default function ConsultasPage() {
           columns={columns}
           data={filteredConsultas}
           pageSize={10}
-          searchPlaceholder="Buscar por paciente..."
+          showSearch={false}
           emptyMessage="No hay consultas registradas"
         />
       ) : (

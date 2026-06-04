@@ -59,17 +59,13 @@ export default function ProtocolosPage() {
   }
 
   const columns = [
-    { header: '#', accessor: 'id' },
     {
       header: 'Protocolo',
       accessor: (row) => row?.nombre,
       render: (value, row) => (
         <div className="person-cell">
           <Avatar name={value} />
-          <div>
             <strong>{value}</strong>
-            <span>{row?.sector?.nombre ?? '-'}</span>
-          </div>
         </div>
       ),
     },
@@ -92,7 +88,6 @@ export default function ProtocolosPage() {
     <main className="page-shell">
       <header className="page-toolbar">
         <div>
-          <span className="page-eyebrow">Protocolos</span>
           <h1 className="page-title">Protocolos</h1>
           <p className="page-description">Gestión de protocolos clínicos y sus especialidades asociadas.</p>
         </div>

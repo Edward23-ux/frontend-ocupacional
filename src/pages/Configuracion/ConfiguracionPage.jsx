@@ -20,7 +20,7 @@ export default function ConfiguracionPage() {
 
   const activeTabConfig = useMemo(() => tabs.find((tab) => tab.key === activeTab) ?? tabs[0], [activeTab])
 
-  if ((rol ?? '').toString().toUpperCase() !== ROLES.MEDICO) {
+  if ((rol ?? '').toString().toUpperCase() !== ROLES.ADMIN) {
     return (
       <main className="page-shell">
         <section className="page-card">
@@ -34,9 +34,7 @@ export default function ConfiguracionPage() {
     <main className="page-shell">
       <header className="page-toolbar">
         <div>
-          <span className="page-eyebrow">Configuración</span>
           <h1 className="page-title">Tablas maestras</h1>
-          <p className="page-description">Administración central de catálogos del sistema clínico.</p>
         </div>
       </header>
 

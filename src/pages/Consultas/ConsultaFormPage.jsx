@@ -40,6 +40,7 @@ export default function ConsultaFormPage() {
   const [protocolos, setProtocolos] = useState([])
   const [estados, setEstados] = useState([])
   const [patientSearch, setPatientSearch] = useState('')
+  const [showPatientResults, setShowPatientResults] = useState(false)
 
   useEffect(() => {
     let active = true
@@ -73,6 +74,7 @@ export default function ConsultaFormPage() {
               fechaConsulta: formatDateForInput(consulta?.fechaConsulta) || todayInputValue(),
               estadoId: consulta?.estado?.id ?? '',
             })
+            setPatientSearch(mapPacienteLabel(consulta?.paciente))
           }
         }
       } catch (fetchError) {
@@ -116,6 +118,20 @@ export default function ConsultaFormPage() {
   const handleChange = (field, value) => {
     setConsultasData((current) => ({ ...current, [field]: value }))
     setFieldErrors((current) => ({ ...current, [field]: undefined }))
+  }
+
+  const handlePatientSearchChange = (value) => {
+    setPatientSearch(value)
+    setConsultasData((current) => ({ ...current, pacienteId: '' }))
+    setFieldErrors((current) => ({ ...current, pacienteId: undefined }))
+    setShowPatientResults(value.trim().length > 0)
+  }
+
+  const handleSelectPatient = (paciente) => {
+    setConsultasData((current) => ({ ...current, pacienteId: String(paciente.id) }))
+    setFieldErrors((current) => ({ ...current, pacienteId: undefined }))
+    setPatientSearch(mapPacienteLabel(paciente))
+    setShowPatientResults(false)
   }
 
   const handleSubmit = async (event) => {
@@ -175,29 +191,48 @@ export default function ConsultaFormPage() {
       <section className="form-card form-card--centered">
         <form className="stack-form" onSubmit={handleSubmit}>
           <label className="field">
-            <span>Paciente *</span>
-            <input
-              type="search"
-              value={patientSearch}
-              onChange={(event) => setPatientSearch(event.target.value)}
-              placeholder="Buscar paciente"
-            />
-            <select
-              value={consultasData.pacienteId}
-              onChange={(event) => handleChange('pacienteId', event.target.value)}
-            >
-              <option value="">Seleccione un paciente</option>
-              {pacientesFiltrados.map((paciente) => (
-                <option key={paciente.id} value={paciente.id}>
-                  {mapPacienteLabel(paciente)}
-                </option>
-              ))}
-            </select>
+            <span>Paciente</span>
+            <div className="patient-search-field">
+              <input
+                type="search"
+                value={patientSearch}
+                onChange={(event) => handlePatientSearchChange(event.target.value)}
+                onFocus={() => setShowPatientResults(patientSearch.trim().length > 0)}
+                onBlur={() => {
+                  window.setTimeout(() => setShowPatientResults(false), 120)
+                }}
+                placeholder="Buscar paciente"
+                autoComplete="off"
+              />
+
+              {showPatientResults && patientSearch.trim() ? (
+                <div className="patient-search-dropdown">
+                  {pacientesFiltrados.length ? (
+                    pacientesFiltrados.map((paciente) => (
+                      <button
+                        key={paciente.id}
+                        type="button"
+                        className="patient-search-option"
+                        onMouseDown={(event) => event.preventDefault()}
+                        onClick={() => handleSelectPatient(paciente)}
+                      >
+                        <strong>{mapPacienteLabel(paciente)}</strong>
+                        <span>{paciente?.correoCoorporativo ?? 'Sin correo corporativo'}</span>
+                      </button>
+                    ))
+                  ) : (
+                    <div className="patient-search-option patient-search-option--empty">
+                      No hay pacientes que coincidan con la búsqueda.
+                    </div>
+                  )}
+                </div>
+              ) : null}
+            </div>
             {fieldErrors.pacienteId ? <span className="field-error">{fieldErrors.pacienteId}</span> : null}
           </label>
 
           <label className="field">
-            <span>Protocolo *</span>
+            <span>Protocolo</span>
             <select
               value={consultasData.protocoloId}
               onChange={(event) => handleChange('protocoloId', event.target.value)}
@@ -213,7 +248,7 @@ export default function ConsultaFormPage() {
           </label>
 
           <label className="field">
-            <span>Fecha de consulta *</span>
+            <span>Fecha de consulta</span>
             <input
               type="date"
               value={consultasData.fechaConsulta}
@@ -224,7 +259,7 @@ export default function ConsultaFormPage() {
           </label>
 
           <label className="field">
-            <span>Estado *</span>
+            <span>Estado</span>
             <select
               value={consultasData.estadoId}
               onChange={(event) => handleChange('estadoId', event.target.value)}

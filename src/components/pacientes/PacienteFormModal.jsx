@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { FiEye, FiEyeOff } from 'react-icons/fi'
 import Button from '../common/Button.jsx'
 import Modal from '../common/Modal.jsx'
 
@@ -42,6 +43,7 @@ export default function PacienteFormModal({
 }) {
   const [form, setForm] = useState(emptyForm)
   const [errors, setErrors] = useState({})
+  const [showPassword, setShowPassword] = useState(false)
 
   useEffect(() => {
     if (open) {
@@ -115,13 +117,13 @@ export default function PacienteFormModal({
       <form className="stack-form" onSubmit={handleSubmit}>
         <div className="form-grid form-grid--two">
           <label className="field">
-            <span>Nombre *</span>
+            <span>Nombre</span>
             <input value={form.nombres} onChange={(event) => setForm((current) => ({ ...current, nombres: event.target.value }))} />
             {errors.nombres ? <span className="field-error">{errors.nombres}</span> : null}
           </label>
 
           <label className="field">
-            <span>Apellido paterno *</span>
+            <span>Apellido paterno</span>
             <input value={form.apellidoPaterno} onChange={(event) => setForm((current) => ({ ...current, apellidoPaterno: event.target.value }))} />
             {errors.apellidoPaterno ? <span className="field-error">{errors.apellidoPaterno}</span> : null}
           </label>
@@ -132,21 +134,37 @@ export default function PacienteFormModal({
           </label>
 
           <label className="field">
-            <span>Correo corporativo *</span>
+            <span>Correo corporativo</span>
             <input type="email" value={form.correoCoorporativo} onChange={(event) => setForm((current) => ({ ...current, correoCoorporativo: event.target.value }))} />
             {errors.correoCoorporativo ? <span className="field-error">{errors.correoCoorporativo}</span> : null}
           </label>
 
           {mode === 'create' ? (
             <label className="field">
-              <span>Contraseña *</span>
-              <input type="password" value={form.contrasena} onChange={(event) => setForm((current) => ({ ...current, contrasena: event.target.value }))} />
+              <span>Contraseña</span>
+              <div className="password-field">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={form.contrasena}
+                  onChange={(event) => setForm((current) => ({ ...current, contrasena: event.target.value }))}
+                  placeholder="••••••••"
+                  autoComplete="new-password"
+                />
+                <button
+                  type="button"
+                  className="password-toggle"
+                  onClick={() => setShowPassword((current) => !current)}
+                  aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                >
+                  {showPassword ? <FiEyeOff /> : <FiEye />}
+                </button>
+              </div>
               {errors.contrasena ? <span className="field-error">{errors.contrasena}</span> : null}
             </label>
           ) : null}
 
           <label className="field">
-            <span>Tipo documento *</span>
+            <span>Tipo documento</span>
             <select value={form.documentoId} onChange={(event) => setForm((current) => ({ ...current, documentoId: event.target.value }))}>
               <option value="">Seleccione...</option>
               {documentos.map((documento) => (
@@ -159,14 +177,14 @@ export default function PacienteFormModal({
           </label>
 
           <label className="field">
-            <span>N° documento *</span>
+            <span>N° documento</span>
             <input value={form.numeroDocumento} onChange={(event) => setForm((current) => ({ ...current, numeroDocumento: event.target.value }))} />
             <small className="field-hint">{documentRule.label}</small>
             {errors.numeroDocumento ? <span className="field-error">{errors.numeroDocumento}</span> : null}
           </label>
 
           <label className="field">
-            <span>Teléfono *</span>
+            <span>Teléfono</span>
             <input value={form.telefono} onChange={(event) => setForm((current) => ({ ...current, telefono: event.target.value }))} />
             {errors.telefono ? <span className="field-error">{errors.telefono}</span> : null}
           </label>

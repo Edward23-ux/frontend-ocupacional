@@ -132,6 +132,7 @@ export function AuthProvider({ children }) {
       rol,
       isAuthenticated: Boolean(token),
       loading,
+      isAdmin: (rol ?? '').toUpperCase() === ROLES.ADMIN,
       isMedico: (rol ?? '').toUpperCase() === ROLES.MEDICO,
       isBiologo: (rol ?? '').toUpperCase() === ROLES.BIOLOGO,
       isEnfermera: (rol ?? '').toUpperCase() === ROLES.ENFERMERA,

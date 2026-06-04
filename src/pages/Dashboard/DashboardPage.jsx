@@ -1,4 +1,5 @@
-import { FiActivity, FiBriefcase, FiClock, FiUserCheck, FiUsers } from 'react-icons/fi'
+import { useMemo, useState } from 'react'
+import { FiActivity, FiBriefcase, FiClock, FiSearch, FiUserCheck, FiUsers } from 'react-icons/fi'
 import Badge from '../../components/common/Badge.jsx'
 import Table from '../../components/common/Table.jsx'
 import StatCard from '../../components/dashboard/StatCard.jsx'
@@ -8,28 +9,28 @@ import { formatDateTimeShort } from '../../utils/formatDate.js'
 const stats = [
   {
     label: 'Consultas hoy',
-    value: 12,
+    value: 5,
     icon: <FiActivity />,
     accent: 'primary',
     helper: 'Atenciones registradas en el día',
   },
   {
     label: 'Pacientes registrados',
-    value: 248,
+    value: 20,
     icon: <FiUsers />,
     accent: 'info',
     helper: 'Base de pacientes activa',
   },
   {
     label: 'Personal activo',
-    value: 8,
+    value: 3,
     icon: <FiUserCheck />,
     accent: 'success',
     helper: 'Profesionales de turno',
   },
   {
     label: 'Empresas activas',
-    value: 15,
+    value: 2,
     icon: <FiBriefcase />,
     accent: 'warning',
     helper: 'Clientes con contratos vigentes',
@@ -62,6 +63,23 @@ const consultaColumns = [
 ]
 
 export default function DashboardPage() {
+  const [searchTerm, setSearchTerm] = useState('')
+
+  const filteredConsultas = useMemo(() => {
+    if (!searchTerm.trim()) {
+      return consultas
+    }
+
+    const normalizedSearch = searchTerm.toLowerCase().trim()
+
+    return consultas.filter((row) =>
+      consultaColumns.some((column) => {
+        const rawValue = typeof column.accessor === 'function' ? column.accessor(row) : row?.[column.accessor]
+        return String(rawValue ?? '').toLowerCase().includes(normalizedSearch)
+      }),
+    )
+  }, [searchTerm])
+
   return (
     <main className="dashboard-page">
       <header className="page-hero">
@@ -77,16 +95,23 @@ export default function DashboardPage() {
       <section className="dashboard-grid">
         <article className="dashboard-card dashboard-card--wide">
           <div className="section-heading">
-            <div>
-              <h2>Últimas 5 consultas del día</h2>
-              <p>Registro más reciente de la jornada clínica.</p>
-            </div>
+            <h2>Últimas 5 consultas del día</h2>
+
+            <label className="table-search dashboard-search">
+              <FiSearch />
+              <input
+                type="search"
+                value={searchTerm}
+                onChange={(event) => setSearchTerm(event.target.value)}
+                placeholder="Buscar consulta"
+              />
+            </label>
           </div>
 
           <Table
             columns={consultaColumns}
-            data={consultas.map((item, index) => ({ ...item, id: `${item.hora}-${index}` }))}
-            searchPlaceholder="Buscar consulta"
+            data={filteredConsultas.map((item, index) => ({ ...item, id: `${item.hora}-${index}` }))}
+            showSearch={false}
             pageSize={5}
           />
         </article>
@@ -95,7 +120,6 @@ export default function DashboardPage() {
           <div className="section-heading">
             <div>
               <h2>Personal de turno hoy</h2>
-              <p>Profesionales disponibles en la jornada.</p>
             </div>
           </div>
 

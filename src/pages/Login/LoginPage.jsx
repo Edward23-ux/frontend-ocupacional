@@ -8,7 +8,7 @@ import { useAuth } from '../../hooks/useAuth.js'
 import { APP_NAME, APP_TAGLINE, ROUTES, ROLES } from '../../utils/constants.js'
 
 const redirectByRole = {
-  [ROLES.MEDICO]: ROUTES.dashboard,
+  [ROLES.ADMIN]: ROUTES.dashboard,
   [ROLES.BIOLOGO]: ROUTES.consultas,
   [ROLES.ENFERMERO]: ROUTES.consultas,
   [ROLES.PACIENTE]: ROUTES.misConsultas,

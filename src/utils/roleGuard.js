@@ -14,4 +14,5 @@ export const hasAllowedRole = (role, allowedRoles = []) => {
   )
 }
 
-export const canAccessMedicalRoutes = (role) => normalizeRole(role) === ROLES.MEDICO
+export const canAccessAdminRoutes = (role) => normalizeRole(role) === ROLES.ADMIN
+export const canAccessMedicalRoutes = canAccessAdminRoutes

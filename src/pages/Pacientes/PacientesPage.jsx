@@ -65,20 +65,21 @@ export default function PacientesPage() {
   }
 
   const columns = [
-    { header: '#', accessor: 'id' },
-    {
-      header: 'Nombre completo',
-      accessor: (row) => getPatientFullName(row),
-      render: (value, row) => (
-        <div className="person-cell">
-          <Avatar name={value} />
-          <div>
-            <strong>{value || 'Sin nombre'}</strong>
-            <span>{row?.correoCoorporativo ?? '-'}</span>
-          </div>
-        </div>
-      ),
-    },
+  {
+    header: 'Nombre completo',
+    accessor: (row) => getPatientFullName(row),
+    render: (value, row) => (
+      <div className="person-cell">
+        <Avatar name={value} />
+        <strong>{value || 'Sin nombre'}</strong>
+      </div>
+    ),
+  },
+  {
+    header: 'Correo corporativo',
+    accessor: 'correoCoorporativo',
+    render: (value) => value ?? '-',
+  },
     {
       header: 'Documento',
       accessor: (row) => row?.documento?.nombre ?? '-',
@@ -106,9 +107,7 @@ export default function PacientesPage() {
     <main className="page-shell">
       <header className="page-toolbar">
         <div>
-          <span className="page-eyebrow">Pacientes</span>
           <h1 className="page-title">Pacientes</h1>
-          <p className="page-description">Listado de usuarios con rol paciente y acceso a su historial clínico.</p>
         </div>
         <Button icon={<FiPlus />} onClick={handleOpenCreate}>Nuevo Paciente</Button>
       </header>

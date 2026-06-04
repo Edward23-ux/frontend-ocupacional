@@ -83,17 +83,13 @@ export default function EmpresasPage() {
   }
 
   const columns = [
-    { header: '#', accessor: 'id' },
     {
       header: 'Empresa',
       accessor: (row) => getCompanyName(row),
       render: (value, row) => (
         <div className="person-cell">
           <Avatar name={value} />
-          <div>
-            <strong>{value}</strong>
-            <span>{row?.razonSocial ?? '-'}</span>
-          </div>
+          <strong>{value}</strong>
         </div>
       ),
     },
@@ -128,9 +124,7 @@ export default function EmpresasPage() {
     <main className="page-shell">
       <header className="page-toolbar">
         <div>
-          <span className="page-eyebrow">Empresas</span>
           <h1 className="page-title">Empresas</h1>
-          <p className="page-description">Gestión de empresas cliente, sectores y responsables.</p>
         </div>
         <Button icon={<FiPlus />} onClick={() => { setEditingEmpresa(null); setOpenModal(true); }}>Nueva Empresa</Button>
       </header>

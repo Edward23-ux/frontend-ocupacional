@@ -51,19 +51,20 @@ export default function PersonalPage() {
   }
 
   const columns = [
-    { header: '#', accessor: 'id' },
     {
       header: 'Nombre',
       accessor: (row) => getFullName(row),
       render: (value, row) => (
         <div className="person-cell">
           <Avatar name={value} />
-          <div>
-            <strong>{value || 'Sin nombre'}</strong>
-            <span>{row?.usuario?.correoCoorporativo ?? '-'}</span>
-          </div>
+          <strong>{value || 'Sin nombre'}</strong>
         </div>
       ),
+    },
+    {
+      header: 'Correo',
+      accessor: (row) => row?.usuario?.correoCoorporativo ?? '-',
+      render: (value) => value,
     },
     {
       header: 'Especialidad',
@@ -101,9 +102,7 @@ export default function PersonalPage() {
     <main className="page-shell">
       <header className="page-toolbar">
         <div>
-          <span className="page-eyebrow">Personal médico</span>
           <h1 className="page-title">Personal médico</h1>
-          <p className="page-description">Administración de personal clínico, especialidades y horarios mensuales.</p>
         </div>
         <div className="page-toolbar__actions">
           <div className="view-toggle">

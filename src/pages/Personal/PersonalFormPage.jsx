@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { FiArrowLeft, FiSave, FiUserPlus } from 'react-icons/fi'
+import { FiArrowLeft, FiEye, FiEyeOff, FiSave, FiUserPlus } from 'react-icons/fi'
 import { useNavigate, useParams } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import Button from '../../components/common/Button.jsx'
@@ -61,6 +61,7 @@ export default function PersonalFormPage() {
   const [existingUserId, setExistingUserId] = useState('')
   const [personalForm, setPersonalForm] = useState(emptyPersonal)
   const [newUserForm, setNewUserForm] = useState(emptyNewUser)
+  const [showPassword, setShowPassword] = useState(false)
 
   const loadData = async () => {
     setLoading(true)
@@ -74,11 +75,13 @@ export default function PersonalFormPage() {
       ])
 
       const roles = rolesResponse?.data ?? []
-      const medicoRole = roles.find((role) => role?.nombre?.toUpperCase() === 'MEDICO')
-      setMedicalRoleId(medicoRole?.id ?? null)
+      const adminRole = roles.find(
+        (role) => role?.id === 1 || role?.nombre?.toUpperCase() === 'ADMIN',
+      )
+      setMedicalRoleId(adminRole?.id ?? null)
 
-      if (medicoRole?.id) {
-        const usersResponse = await getUsuariosByRol(medicoRole.id)
+      if (adminRole?.id) {
+        const usersResponse = await getUsuariosByRol(adminRole.id)
         setMedicalUsers(Array.isArray(usersResponse?.data) ? usersResponse.data : [])
       }
 
@@ -210,7 +213,7 @@ export default function PersonalFormPage() {
             <div className="section-heading">
               <div>
                 <h2>Datos del usuario vinculado</h2>
-                <p>El personal queda asociado a un usuario con rol médico.</p>
+                <p>El personal queda asociado a un usuario con rol administrador.</p>
               </div>
               <div className="form-switch">
                 <Button variant={modeUser === 'existing' ? 'primary' : 'outline'} type="button" onClick={() => setModeUser('existing')}>
@@ -244,14 +247,33 @@ export default function PersonalFormPage() {
               </div>
             ) : (
               <div className="form-grid form-grid--two">
-                <label className="field"><span>Nombre *</span><input value={newUserForm.nombres} onChange={(event) => setNewUserForm((current) => ({ ...current, nombres: event.target.value }))} /></label>
-                <label className="field"><span>Apellido paterno *</span><input value={newUserForm.apellidoPaterno} onChange={(event) => setNewUserForm((current) => ({ ...current, apellidoPaterno: event.target.value }))} /></label>
+                <label className="field"><span>Nombre</span><input value={newUserForm.nombres} onChange={(event) => setNewUserForm((current) => ({ ...current, nombres: event.target.value }))} /></label>
+                <label className="field"><span>Apellido paterno</span><input value={newUserForm.apellidoPaterno} onChange={(event) => setNewUserForm((current) => ({ ...current, apellidoPaterno: event.target.value }))} /></label>
                 <label className="field"><span>Apellido materno</span><input value={newUserForm.apellidoMaterno} onChange={(event) => setNewUserForm((current) => ({ ...current, apellidoMaterno: event.target.value }))} /></label>
-                <label className="field"><span>Correo *</span><input type="email" value={newUserForm.correoCoorporativo} onChange={(event) => setNewUserForm((current) => ({ ...current, correoCoorporativo: event.target.value }))} /></label>
-                <label className="field"><span>Contraseña *</span><input type="password" value={newUserForm.contrasena} onChange={(event) => setNewUserForm((current) => ({ ...current, contrasena: event.target.value }))} /></label>
-                <label className="field"><span>Tipo documento *</span><select value={newUserForm.documentoId} onChange={(event) => setNewUserForm((current) => ({ ...current, documentoId: event.target.value }))}><option value="">Seleccione...</option>{documentos.map((documento) => <option key={documento.id} value={documento.id}>{documento.nombre}</option>)}</select></label>
-                <label className="field"><span>N° documento *</span><input value={newUserForm.numeroDocumento} onChange={(event) => setNewUserForm((current) => ({ ...current, numeroDocumento: event.target.value }))} /></label>
-                <label className="field"><span>Teléfono *</span><input value={newUserForm.telefono} onChange={(event) => setNewUserForm((current) => ({ ...current, telefono: event.target.value }))} /></label>
+                <label className="field"><span>Correo</span><input type="email" value={newUserForm.correoCoorporativo} onChange={(event) => setNewUserForm((current) => ({ ...current, correoCoorporativo: event.target.value }))} /></label>
+                <label className="field">
+                  <span>Contraseña</span>
+                  <div className="password-field">
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      value={newUserForm.contrasena}
+                      onChange={(event) => setNewUserForm((current) => ({ ...current, contrasena: event.target.value }))}
+                      placeholder="••••••••"
+                      autoComplete="new-password"
+                    />
+                    <button
+                      type="button"
+                      className="password-toggle"
+                      onClick={() => setShowPassword((current) => !current)}
+                      aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                    >
+                      {showPassword ? <FiEyeOff /> : <FiEye />}
+                    </button>
+                  </div>
+                </label>
+                <label className="field"><span>Tipo documento</span><select value={newUserForm.documentoId} onChange={(event) => setNewUserForm((current) => ({ ...current, documentoId: event.target.value }))}><option value="">Seleccione...</option>{documentos.map((documento) => <option key={documento.id} value={documento.id}>{documento.nombre}</option>)}</select></label>
+                <label className="field"><span>N° documento</span><input value={newUserForm.numeroDocumento} onChange={(event) => setNewUserForm((current) => ({ ...current, numeroDocumento: event.target.value }))} /></label>
+                <label className="field"><span>Teléfono</span><input value={newUserForm.telefono} onChange={(event) => setNewUserForm((current) => ({ ...current, telefono: event.target.value }))} /></label>
               </div>
             )}
           </div>
@@ -266,7 +288,7 @@ export default function PersonalFormPage() {
 
             <div className="form-grid form-grid--two">
               <label className="field">
-                <span>Especialidad *</span>
+                <span>Especialidad</span>
                 <select value={personalForm.especialidadId} onChange={(event) => setPersonalForm((current) => ({ ...current, especialidadId: event.target.value }))}>
                   <option value="">Seleccione...</option>
                   {especialidades.map((item) => <option key={item.id} value={item.id}>{item.nombre}</option>)}
@@ -274,19 +296,19 @@ export default function PersonalFormPage() {
               </label>
 
               <label className="field">
-                <span>Tipo contrato *</span>
+                <span>Tipo contrato</span>
                 <select value={personalForm.contratoId} onChange={(event) => setPersonalForm((current) => ({ ...current, contratoId: event.target.value }))}>
                   <option value="">Seleccione...</option>
                   {contratos.map((item) => <option key={item.id} value={item.id}>{item.nombre}</option>)}
                 </select>
               </label>
 
-              <label className="field"><span>N° Colegiatura *</span><input value={personalForm.numeroColegiatura} onChange={(event) => setPersonalForm((current) => ({ ...current, numeroColegiatura: event.target.value }))} /></label>
+              <label className="field"><span>N° Colegiatura</span><input value={personalForm.numeroColegiatura} onChange={(event) => setPersonalForm((current) => ({ ...current, numeroColegiatura: event.target.value }))} /></label>
               <label className="field"><span>N° Especialidad</span><input value={personalForm.numeroEspecialidad} onChange={(event) => setPersonalForm((current) => ({ ...current, numeroEspecialidad: event.target.value }))} /></label>
               <label className="field"><span>Firma digital</span><input value={personalForm.firmaDigital} onChange={(event) => setPersonalForm((current) => ({ ...current, firmaDigital: event.target.value }))} /></label>
               <label className="field"><span>Estado</span><select value={String(personalForm.vigente)} onChange={(event) => setPersonalForm((current) => ({ ...current, vigente: event.target.value === 'true' }))}><option value="true">Activo</option><option value="false">Inactivo</option></select></label>
-              <label className="field"><span>Fecha inicio contrato *</span><input type="date" value={personalForm.inicioContrato} onChange={(event) => setPersonalForm((current) => ({ ...current, inicioContrato: event.target.value }))} /></label>
-              <label className="field"><span>Fecha fin contrato *</span><input type="date" value={personalForm.finContrato} onChange={(event) => setPersonalForm((current) => ({ ...current, finContrato: event.target.value }))} /></label>
+              <label className="field"><span>Fecha inicio contrato</span><input type="date" value={personalForm.inicioContrato} onChange={(event) => setPersonalForm((current) => ({ ...current, inicioContrato: event.target.value }))} /></label>
+              <label className="field"><span>Fecha fin contrato</span><input type="date" value={personalForm.finContrato} onChange={(event) => setPersonalForm((current) => ({ ...current, finContrato: event.target.value }))} /></label>
             </div>
           </div>
 

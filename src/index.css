@@ -1986,6 +1986,60 @@ p {
   box-shadow: 0 0 0 3px rgba(30, 121, 190, 0.1);
 }
 
+.patient-search-field {
+  position: relative;
+}
+
+.patient-search-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  z-index: 40;
+  display: grid;
+  gap: 6px;
+  max-height: 240px;
+  overflow: auto;
+  padding: 8px;
+  border: 1px solid rgba(26, 111, 175, 0.14);
+  border-radius: 14px;
+  background: var(--white);
+  box-shadow: var(--shadow);
+}
+
+.patient-search-option {
+  width: 100%;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  padding: 10px 12px;
+  text-align: left;
+  color: var(--text-main);
+  display: grid;
+  gap: 2px;
+  cursor: pointer;
+}
+
+.patient-search-option:hover,
+.patient-search-option:focus-visible {
+  background: rgba(30, 121, 190, 0.08);
+  outline: none;
+}
+
+.patient-search-option span {
+  color: var(--text-muted);
+  font-size: 0.88rem;
+}
+
+.patient-search-option--empty {
+  cursor: default;
+}
+
+.patient-search-option--empty:hover,
+.patient-search-option--empty:focus-visible {
+  background: transparent;
+}
+
 .master-row--editing {
   background: rgba(30, 121, 190, 0.04) !important;
 }
