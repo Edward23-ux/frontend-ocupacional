@@ -1,7 +1,7 @@
 import axios from 'axios'
 import { AUTH_STORAGE_KEYS } from '../utils/constants'
 
-const BASE_URL = 'http://18.191.216.54:8080/backend-staging/api'
+const BASE_URL = 'http://18.191.216.54:8080/backend-staging/'
 
 export const api = axios.create({
   baseURL: BASE_URL,
