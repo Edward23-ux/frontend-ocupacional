@@ -21,6 +21,7 @@ const emptyNewUser = {
   apellidoMaterno: '',
   correoCoorporativo: '',
   contrasena: '',
+  rolId: '',
   documentoId: '',
   numeroDocumento: '',
   telefono: '',
@@ -156,7 +157,7 @@ export default function PersonalFormPage() {
       if (!isEditMode && modeUser === 'new') {
         const userResponse = await createUsuario({
           ...newUserForm,
-          rolId: medicalRoleId,
+          rolId: Number(newUserForm.rolId),
           documentoId: Number(newUserForm.documentoId),
         })
         usuarioId = userResponse?.data?.id ?? userResponse?.id
@@ -213,7 +214,6 @@ export default function PersonalFormPage() {
             <div className="section-heading">
               <div>
                 <h2>Datos del usuario vinculado</h2>
-                <p>El personal queda asociado a un usuario con rol administrador.</p>
               </div>
               <div className="form-switch">
                 <Button variant={modeUser === 'existing' ? 'primary' : 'outline'} type="button" onClick={() => setModeUser('existing')}>
@@ -271,9 +271,9 @@ export default function PersonalFormPage() {
                     </button>
                   </div>
                 </label>
-                <label className="field"><span>Tipo documento</span><select value={newUserForm.documentoId} onChange={(event) => setNewUserForm((current) => ({ ...current, documentoId: event.target.value }))}><option value="">Seleccione...</option>{documentos.map((documento) => <option key={documento.id} value={documento.id}>{documento.nombre}</option>)}</select></label>
+                <label className="field"><span>Rol</span><select value={newUserForm.rolId} onChange={(event) => setNewUserForm((current) => ({ ...current, rolId: event.target.value }))}><option value="">Seleccione...</option><option value="2">Biólogo</option><option value="3">Enfermera</option><option value="6">Médico</option><option value="7">Recepcionista</option></select></label>
+                <label className="field"><span>Tipo documento</span><select value={newUserForm.documentoId} onChange={(event) => setNewUserForm((current) => ({ ...current, documentoId: event.target.value }))}><option value="">Seleccione...</option>{documentos.filter((doc) => doc.nombre === 'DNI' || doc.nombre === 'C. Ext').map((documento) => <option key={documento.id} value={documento.id}>{documento.nombre}</option>)}</select></label>
                 <label className="field"><span>N° documento</span><input value={newUserForm.numeroDocumento} onChange={(event) => setNewUserForm((current) => ({ ...current, numeroDocumento: event.target.value }))} /></label>
-                <label className="field"><span>Teléfono</span><input value={newUserForm.telefono} onChange={(event) => setNewUserForm((current) => ({ ...current, telefono: event.target.value }))} /></label>
               </div>
             )}
           </div>
