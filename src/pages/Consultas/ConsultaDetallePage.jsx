@@ -13,18 +13,16 @@ import { formatDate } from '../../utils/formatDate.js'
 import { ROUTES } from '../../utils/constants.js'
 import { getPersonal } from '../../api/endpoints/personalApi.js'
 import { getEstados } from '../../api/endpoints/estadosApi.js'
+import { getEspecialidadesActivas } from '../../api/endpoints/especialidadesApi.js'
 import {
   createDetalleConsulta,
   getDetalleConsultasByConsulta,
 } from '../../api/endpoints/detalleConsultasApi.js'
-import {
-  getProtocoloEspecialidadesByProtocolo,
-} from '../../api/endpoints/protocoloEspecialidadApi.js'
 
 const emptyDetailForm = {
   medicoId: '',
   estadoId: '',
-  protocoloEspecialidadId: '',
+  especialidadId: '',
   resultados: '',
 }
 
@@ -32,12 +30,17 @@ const getPacienteName = (consulta) =>
   `${consulta?.paciente?.nombres ?? ''} ${consulta?.paciente?.apellidoPaterno ?? ''} ${consulta?.paciente?.apellidoMaterno ?? ''}`.trim() ||
   'Sin paciente'
 
+const getUsuarioFullName = (usuario) => {
+  if (!usuario) return 'Sin dato'
+  return `${usuario?.nombres ?? ''} ${usuario?.apellidoPaterno ?? ''} ${usuario?.apellidoMaterno ?? ''}`.trim() || 'Sin nombre'
+}
+
 const getEstadoName = (estado) => estado?.nombre ?? 'Sin estado'
 
 const getNestedLabel = (value, fallback = 'Sin dato') => {
   if (!value) return fallback
   if (typeof value === 'string') return value
-  return value?.nombre ?? value?.especialidad?.nombre ?? value?.protocolo?.nombre ?? fallback
+  return value?.nombre ?? value?.especialidad?.nombre ?? fallback
 }
 
 export default function ConsultaDetallePage() {
@@ -53,10 +56,8 @@ export default function ConsultaDetallePage() {
   const [saving, setSaving] = useState(false)
   const [personal, setPersonal] = useState([])
   const [estados, setEstados] = useState([])
-  const [protocoloEspecialidades, setProtocoloEspecialidades] = useState([])
+  const [especialidades, setEspecialidades] = useState([])
   const [form, setForm] = useState(emptyDetailForm)
-
-  const protocoloId = consulta?.protocolo?.id
 
   const loadDetalle = async () => {
     setLoadingDetalles(true)
@@ -102,11 +103,16 @@ export default function ConsultaDetallePage() {
 
     const loadDependencies = async () => {
       try {
-        const [personalResponse, estadosResponse] = await Promise.all([getPersonal(), getEstados()])
+        const [personalResponse, estadosResponse, especialidadesResponse] = await Promise.all([
+          getPersonal(),
+          getEstados(),
+          getEspecialidadesActivas(),
+        ])
 
         if (active) {
           setPersonal(Array.isArray(personalResponse?.data) ? personalResponse.data : [])
           setEstados(Array.isArray(estadosResponse?.data) ? estadosResponse.data : [])
+          setEspecialidades(Array.isArray(especialidadesResponse?.data) ? especialidadesResponse.data : [])
         }
       } catch (dependencyError) {
         toast.error(dependencyError?.message || 'No se pudieron cargar catálogos.')
@@ -120,41 +126,15 @@ export default function ConsultaDetallePage() {
     }
   }, [])
 
-  useEffect(() => {
-    let active = true
-
-    const loadProtocolos = async () => {
-      if (!protocoloId) {
-        setProtocoloEspecialidades([])
-        return
-      }
-
-      try {
-        const response = await getProtocoloEspecialidadesByProtocolo(protocoloId)
-        if (active) {
-          setProtocoloEspecialidades(Array.isArray(response?.data) ? response.data : [])
-        }
-      } catch (protocolError) {
-        toast.error(protocolError?.message || 'No se pudieron cargar protocolos asociados.')
-      }
-    }
-
-    loadProtocolos()
-
-    return () => {
-      active = false
-    }
-  }, [protocoloId])
-
   const detalleColumns = useMemo(
     () => [
       {
         header: 'Médico',
-        accessor: (row) => getNestedLabel(row?.medico?.usuario),
+        accessor: (row) => getUsuarioFullName(row?.medico?.usuario),
       },
       {
         header: 'Especialidad',
-        accessor: (row) => getNestedLabel(row?.medico?.especialidad),
+        accessor: (row) => getNestedLabel(row?.especialidad),
       },
       {
         header: 'Estado',
@@ -185,9 +165,9 @@ export default function ConsultaDetallePage() {
     try {
       await createDetalleConsulta({
         consultaId: Number(id),
-        medicoId: Number(form.medicoId),
+        medicoId: form.medicoId ? Number(form.medicoId) : null,
         estadoId: Number(form.estadoId),
-        protocoloEspecialidadId: Number(form.protocoloEspecialidadId),
+        especialidadId: Number(form.especialidadId),
         resultados: form.resultados,
       })
       toast.success('Detalle de consulta agregado correctamente')
@@ -229,21 +209,21 @@ export default function ConsultaDetallePage() {
         </Button>
       </header>
 
-      <section className="detail-grid">
-        <article className="detail-card">
+      <section className="detail-card detail-card--full" style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', gap: '2rem', padding: '1.5rem', marginBottom: '1.5rem' }}>
+        <div style={{ flex: 1, minWidth: '250px' }}>
           <span className="page-eyebrow">Paciente</span>
-          <h2>{getPacienteName(consulta)}</h2>
-          <p>DNI: {consulta?.paciente?.numeroDocumento ?? '-'}</p>
-          <p>Tel: {consulta?.paciente?.telefono ?? '-'}</p>
-          <p>Correo: {consulta?.paciente?.correoCoorporativo ?? '-'}</p>
-        </article>
+          <h2 style={{ fontSize: '1.25rem', margin: '0.25rem 0' }}>{getPacienteName(consulta)}</h2>
+          <p style={{ margin: '0.25rem 0', fontSize: '0.85rem' }}><strong>DNI:</strong> {consulta?.paciente?.numeroDocumento ?? '-'}</p>
+          <p style={{ margin: '0.25rem 0', fontSize: '0.85rem' }}><strong>Tel:</strong> {consulta?.paciente?.telefono ?? '-'}</p>
+          <p style={{ margin: '0.25rem 0', fontSize: '0.85rem' }}><strong>Correo:</strong> {consulta?.paciente?.correoCoorporativo ?? '-'}</p>
+        </div>
 
-        <article className="detail-card">
+        <div style={{ flex: 1, minWidth: '250px', borderLeft: '1px solid var(--border-color, #e2e8f0)', paddingLeft: '2rem' }}>
           <span className="page-eyebrow">Datos de consulta</span>
-          <p><strong>Fecha:</strong> {formatDate(consulta?.fechaConsulta)}</p>
-          <p><strong>Estado:</strong> <Badge status={getEstadoName(consulta?.estado)}>{getEstadoName(consulta?.estado)}</Badge></p>
-          <p><strong>Protocolo:</strong> {consulta?.protocolo?.nombre ?? '-'}</p>
-        </article>
+          <p style={{ margin: '0.25rem 0', fontSize: '0.875rem' }}><strong>Fecha:</strong> {formatDate(consulta?.fechaConsulta)}</p>
+          <p style={{ margin: '0.25rem 0', fontSize: '0.875rem' }}><strong>Turno:</strong> {consulta?.turno?.nombre ?? '-'}</p>
+          <p style={{ margin: '0.25rem 0', fontSize: '0.875rem' }}><strong>Estado:</strong> <Badge status={getEstadoName(consulta?.estado)}>{getEstadoName(consulta?.estado)}</Badge></p>
+        </div>
       </section>
 
       <section className="detail-card detail-card--full">
@@ -278,12 +258,12 @@ export default function ConsultaDetallePage() {
       >
         <form className="stack-form" onSubmit={handleAddDetalle}>
           <label className="field">
-            <span>Médico</span>
-            <select value={form.medicoId} onChange={(event) => setForm((current) => ({ ...current, medicoId: event.target.value }))} required>
+            <span>Médico (Opcional)</span>
+            <select value={form.medicoId} onChange={(event) => setForm((current) => ({ ...current, medicoId: event.target.value }))}>
               <option value="">Seleccione un médico</option>
               {personal.map((item) => (
                 <option key={item.id} value={item.id}>
-                  {getNestedLabel(item?.usuario)} - {getNestedLabel(item?.especialidad)}
+                  {getUsuarioFullName(item?.usuario)} - {getNestedLabel(item?.especialidad)}
                 </option>
               ))}
             </select>
@@ -302,12 +282,12 @@ export default function ConsultaDetallePage() {
           </label>
 
           <label className="field">
-            <span>Protocolo Especialidad</span>
-            <select value={form.protocoloEspecialidadId} onChange={(event) => setForm((current) => ({ ...current, protocoloEspecialidadId: event.target.value }))} required>
+            <span>Especialidad</span>
+            <select value={form.especialidadId} onChange={(event) => setForm((current) => ({ ...current, especialidadId: event.target.value }))} required>
               <option value="">Seleccione una opción</option>
-              {protocoloEspecialidades.map((item) => (
+              {especialidades.map((item) => (
                 <option key={item.id} value={item.id}>
-                  {getNestedLabel(item?.especialidad)} / {getNestedLabel(item?.protocolo)}
+                  {item.nombre}
                 </option>
               ))}
             </select>

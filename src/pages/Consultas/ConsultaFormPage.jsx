@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { FiArrowLeft, FiSave } from 'react-icons/fi'
+import { FiArrowLeft, FiSave, FiCheckCircle } from 'react-icons/fi'
 import { useNavigate, useParams } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import Button from '../../components/common/Button.jsx'
@@ -8,12 +8,17 @@ import Spinner from '../../components/common/Spinner.jsx'
 import { useConsultas } from '../../hooks/useConsultas.js'
 import { getRoles } from '../../api/endpoints/rolesApi.js'
 import { getUsuariosByRol } from '../../api/endpoints/usuariosApi.js'
-import { getProtocolos } from '../../api/endpoints/protocolosApi.js'
-import { getEstados } from '../../api/endpoints/estadosApi.js'
+import { getEspecialidadesActivas } from '../../api/endpoints/especialidadesApi.js'
+import { getTurnosActivos } from '../../api/endpoints/turnosApi.js'
 import { formatDateForInput } from '../../utils/formatDate.js'
 import { ROUTES } from '../../utils/constants.js'
 
 const todayInputValue = () => new Date().toISOString().slice(0, 10)
+const maxDateValue = () => {
+  const d = new Date()
+  d.setDate(d.getDate() + 7)
+  return d.toISOString().slice(0, 10)
+}
 
 const mapPacienteLabel = (usuario) =>
   `${usuario?.nombres ?? ''} ${usuario?.apellidoPaterno ?? ''} ${usuario?.apellidoMaterno ?? ''}`.trim() ||
@@ -31,14 +36,14 @@ export default function ConsultaFormPage() {
   const [error, setError] = useState('')
   const [consultasData, setConsultasData] = useState({
     pacienteId: '',
-    protocoloId: '',
+    especialidadesIds: [],
     fechaConsulta: todayInputValue(),
-    estadoId: '',
+    turnoId: '',
   })
   const [fieldErrors, setFieldErrors] = useState({})
   const [pacientes, setPacientes] = useState([])
-  const [protocolos, setProtocolos] = useState([])
-  const [estados, setEstados] = useState([])
+  const [especialidades, setEspecialidades] = useState([])
+  const [turnos, setTurnos] = useState([])
   const [patientSearch, setPatientSearch] = useState('')
   const [showPatientResults, setShowPatientResults] = useState(false)
 
@@ -47,10 +52,10 @@ export default function ConsultaFormPage() {
 
     const load = async () => {
       try {
-        const [rolesResponse, protocolosResponse, estadosResponse] = await Promise.all([
+        const [rolesResponse, especialidadesResponse, turnosResponse] = await Promise.all([
           getRoles(),
-          getProtocolos(),
-          getEstados(),
+          getEspecialidadesActivas(),
+          getTurnosActivos(),
         ])
 
         const rolesData = rolesResponse?.data ?? []
@@ -62,17 +67,17 @@ export default function ConsultaFormPage() {
         }
 
         setPacientes(Array.isArray(pacientesResponse?.data) ? pacientesResponse.data : [])
-        setProtocolos(Array.isArray(protocolosResponse?.data) ? protocolosResponse.data : [])
-        setEstados(Array.isArray(estadosResponse?.data) ? estadosResponse.data : [])
+        setEspecialidades(Array.isArray(especialidadesResponse?.data) ? especialidadesResponse.data : [])
+        setTurnos(Array.isArray(turnosResponse?.data) ? turnosResponse.data : [])
 
         if (isEditMode) {
           const consulta = await fetchConsultaById(id)
           if (consulta && active) {
             setConsultasData({
               pacienteId: consulta?.paciente?.id ?? '',
-              protocoloId: consulta?.protocolo?.id ?? '',
+              especialidadesIds: consulta?.detalleConsultas?.map((dc) => dc.especialidad?.id).filter(Boolean) ?? [],
               fechaConsulta: formatDateForInput(consulta?.fechaConsulta) || todayInputValue(),
-              estadoId: consulta?.estado?.id ?? '',
+              turnoId: consulta?.turno?.id ?? '',
             })
             setPatientSearch(mapPacienteLabel(consulta?.paciente))
           }
@@ -103,12 +108,14 @@ export default function ConsultaFormPage() {
     const nextErrors = {}
 
     if (!consultasData.pacienteId) nextErrors.pacienteId = 'El paciente es obligatorio.'
-    if (!consultasData.protocoloId) nextErrors.protocoloId = 'El protocolo es obligatorio.'
+    if (!consultasData.especialidadesIds || consultasData.especialidadesIds.length === 0) {
+      nextErrors.especialidadesIds = 'Debe seleccionar al menos una especialidad.'
+    }
     if (!consultasData.fechaConsulta) nextErrors.fechaConsulta = 'La fecha es obligatoria.'
-    if (!consultasData.estadoId) nextErrors.estadoId = 'El estado es obligatorio.'
+    if (!consultasData.turnoId) nextErrors.turnoId = 'El turno es obligatorio.'
 
-    if (consultasData.fechaConsulta && consultasData.fechaConsulta > todayInputValue()) {
-      nextErrors.fechaConsulta = 'La fecha no puede ser futura.'
+    if (consultasData.fechaConsulta && consultasData.fechaConsulta > maxDateValue()) {
+      nextErrors.fechaConsulta = 'La fecha no puede ser posterior a 1 semana desde hoy.'
     }
 
     setFieldErrors(nextErrors)
@@ -134,6 +141,15 @@ export default function ConsultaFormPage() {
     setShowPatientResults(false)
   }
 
+  const toggleSpecialty = (espId) => {
+    setConsultasData((prev) => {
+      const current = prev.especialidadesIds
+      const next = current.includes(espId) ? current.filter((id) => id !== espId) : [...current, espId]
+      return { ...prev, especialidadesIds: next }
+    })
+    setFieldErrors((prev) => ({ ...prev, especialidadesIds: undefined }))
+  }
+
   const handleSubmit = async (event) => {
     event.preventDefault()
 
@@ -145,9 +161,9 @@ export default function ConsultaFormPage() {
 
     const payload = {
       pacienteId: Number(consultasData.pacienteId),
-      protocoloId: Number(consultasData.protocoloId),
+      especialidadesIds: consultasData.especialidadesIds.map(Number),
       fechaConsulta: consultasData.fechaConsulta,
-      estadoId: Number(consultasData.estadoId),
+      turnoId: Number(consultasData.turnoId),
     }
 
     try {
@@ -188,10 +204,11 @@ export default function ConsultaFormPage() {
 
       {error ? <Alert type="error" title="Error">{error}</Alert> : null}
 
-      <section className="form-card form-card--centered">
+      <section className="form-card form-card--centered" style={{ maxWidth: '680px' }}>
         <form className="stack-form" onSubmit={handleSubmit}>
+          {/* Paciente Section */}
           <label className="field">
-            <span>Paciente</span>
+            <span style={{ fontSize: '0.9rem', fontWeight: '600' }}>Paciente</span>
             <div className="patient-search-field">
               <input
                 type="search"
@@ -201,8 +218,9 @@ export default function ConsultaFormPage() {
                 onBlur={() => {
                   window.setTimeout(() => setShowPatientResults(false), 120)
                 }}
-                placeholder="Buscar paciente"
+                placeholder="Buscar paciente por nombre o correo"
                 autoComplete="off"
+                style={{ padding: '0.75rem', borderRadius: '0.5rem' }}
               />
 
               {showPatientResults && patientSearch.trim() ? (
@@ -231,50 +249,90 @@ export default function ConsultaFormPage() {
             {fieldErrors.pacienteId ? <span className="field-error">{fieldErrors.pacienteId}</span> : null}
           </label>
 
-          <label className="field">
-            <span>Protocolo</span>
-            <select
-              value={consultasData.protocoloId}
-              onChange={(event) => handleChange('protocoloId', event.target.value)}
-            >
-              <option value="">Seleccione un protocolo</option>
-              {protocolos.map((protocolo) => (
-                <option key={protocolo.id} value={protocolo.id}>
-                  {protocolo.nombre}
-                </option>
-              ))}
-            </select>
-            {fieldErrors.protocoloId ? <span className="field-error">{fieldErrors.protocoloId}</span> : null}
-          </label>
+          {/* Especialidades Section */}
+          <div className="field">
+            <span style={{ fontSize: '0.9rem', fontWeight: '600' }}>¿Por qué especialidades va a pasar?</span>
+            <p style={{ fontSize: '0.8rem', color: 'var(--text-light, #64748b)', marginBottom: '0.75rem' }}>Selecciona todas las especialidades requeridas para la cita del paciente.</p>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '0.75rem' }}>
+              {especialidades.map((esp) => {
+                const isSelected = consultasData.especialidadesIds.includes(esp.id)
+                return (
+                  <div
+                    key={esp.id}
+                    onClick={() => toggleSpecialty(esp.id)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'between',
+                      padding: '0.85rem 1rem',
+                      borderRadius: '0.5rem',
+                      border: isSelected ? '2px solid var(--primary-color, #3b82f6)' : '1px solid var(--border-color, #cbd5e1)',
+                      backgroundColor: isSelected ? 'var(--primary-light, #eff6ff)' : 'transparent',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      userSelect: 'none',
+                    }}
+                  >
+                    <span style={{ flex: 1, fontWeight: isSelected ? '600' : '400', fontSize: '0.875rem' }}>
+                      {esp.nombre}
+                    </span>
+                    {isSelected && <FiCheckCircle style={{ color: 'var(--primary-color, #3b82f6)', fontSize: '1.1rem' }} />}
+                  </div>
+                )
+              })}
+            </div>
+            {fieldErrors.especialidadesIds ? <span className="field-error">{fieldErrors.especialidadesIds}</span> : null}
+          </div>
 
-          <label className="field">
-            <span>Fecha de consulta</span>
-            <input
-              type="date"
-              value={consultasData.fechaConsulta}
-              onChange={(event) => handleChange('fechaConsulta', event.target.value)}
-              max={todayInputValue()}
-            />
-            {fieldErrors.fechaConsulta ? <span className="field-error">{fieldErrors.fechaConsulta}</span> : null}
-          </label>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            {/* Fecha de consulta */}
+            <label className="field">
+              <span style={{ fontSize: '0.9rem', fontWeight: '600' }}>Fecha de consulta</span>
+              <input
+                type="date"
+                value={consultasData.fechaConsulta}
+                onChange={(event) => handleChange('fechaConsulta', event.target.value)}
+                min={todayInputValue()}
+                max={maxDateValue()}
+                style={{ padding: '0.75rem', borderRadius: '0.5rem' }}
+              />
+              {fieldErrors.fechaConsulta ? <span className="field-error">{fieldErrors.fechaConsulta}</span> : null}
+            </label>
 
-          <label className="field">
-            <span>Estado</span>
-            <select
-              value={consultasData.estadoId}
-              onChange={(event) => handleChange('estadoId', event.target.value)}
-            >
-              <option value="">Seleccione un estado</option>
-              {estados.map((estado) => (
-                <option key={estado.id} value={estado.id}>
-                  {estado.nombre}
-                </option>
-              ))}
-            </select>
-            {fieldErrors.estadoId ? <span className="field-error">{fieldErrors.estadoId}</span> : null}
-          </label>
+            {/* Turno Section */}
+            <div className="field">
+              <span style={{ fontSize: '0.9rem', fontWeight: '600' }}>Turno de atención</span>
+              <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.25rem' }}>
+                {turnos.map((t) => {
+                  const isSelected = String(consultasData.turnoId) === String(t.id)
+                  return (
+                    <button
+                      key={t.id}
+                      type="button"
+                      onClick={() => handleChange('turnoId', String(t.id))}
+                      style={{
+                        flex: 1,
+                        padding: '0.75rem',
+                        borderRadius: '0.5rem',
+                        border: isSelected ? '2px solid var(--primary-color, #3b82f6)' : '1px solid var(--border-color, #cbd5e1)',
+                        backgroundColor: isSelected ? 'var(--primary-light, #eff6ff)' : 'transparent',
+                        color: isSelected ? 'var(--primary-dark, #1e40af)' : 'inherit',
+                        fontWeight: '600',
+                        fontSize: '0.85rem',
+                        cursor: 'pointer',
+                        transition: 'all 0.15s ease',
+                      }}
+                    >
+                      {t.nombre}
+                    </button>
+                  )
+                })}
+              </div>
+              {fieldErrors.turnoId ? <span className="field-error">{fieldErrors.turnoId}</span> : null}
+            </div>
+          </div>
 
-          <div className="form-actions">
+          <div className="form-actions" style={{ marginTop: '1.5rem', borderTop: '1px solid var(--border-color, #cbd5e1)', paddingTop: '1.25rem' }}>
             <Button variant="outline" onClick={() => navigate(ROUTES.consultas)} disabled={saving}>
               Cancelar
             </Button>

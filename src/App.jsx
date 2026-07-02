@@ -13,8 +13,6 @@ import PacienteHistorialPage from './pages/Pacientes/PacienteHistorialPage.jsx'
 import PersonalPage from './pages/Personal/PersonalPage.jsx'
 import PersonalFormPage from './pages/Personal/PersonalFormPage.jsx'
 import EmpresasPage from './pages/Empresas/EmpresasPage.jsx'
-import ProtocolosPage from './pages/Protocolos/ProtocolosPage.jsx'
-import ProtocoloFormPage from './pages/Protocolos/ProtocoloFormPage.jsx'
 import ConfiguracionPage from './pages/Configuracion/ConfiguracionPage.jsx'
 
 function SectionPage({ title, description }) {
@@ -98,9 +96,7 @@ function App() {
         <Route path={ROUTES.personalNuevo} element={<ProtectedRoute allowedRoles={[ROLES.ADMIN]}><PersonalFormPage /></ProtectedRoute>} />
         <Route path={ROUTES.personalEditar()} element={<ProtectedRoute allowedRoles={[ROLES.ADMIN]}><PersonalFormPage /></ProtectedRoute>} />
         <Route path={ROUTES.empresas} element={<ProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.CLIENTE]}><EmpresasPage /></ProtectedRoute>} />
-        <Route path={ROUTES.protocolos} element={<ProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.BIOLOGO, ROLES.ENFERMERO]}><ProtocolosPage /></ProtectedRoute>} />
-        <Route path={ROUTES.protocoloNuevo} element={<ProtectedRoute allowedRoles={[ROLES.ADMIN]}><ProtocoloFormPage /></ProtectedRoute>} />
-        <Route path={ROUTES.protocoloEditar()} element={<ProtectedRoute allowedRoles={[ROLES.ADMIN]}><ProtocoloFormPage /></ProtectedRoute>} />
+
         <Route
           path={ROUTES.configuracion}
           element={
