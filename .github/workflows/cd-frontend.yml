@@ -34,12 +34,20 @@ jobs:
           chmod 600 ~/.ssh/staging_key.pem
           ssh-keyscan -H ${{ secrets.STAGING_HOST }} >> ~/.ssh/known_hosts
 
-      - name: Clean and Copy Static Files to Tomcat ROOT Staging
+      # PASO CORREGIDO: Sube temporalmente los archivos a la carpeta del usuario ubuntu
+      - name: Upload Static Files to Temp Directory
         run: |
-          # Limpia el contenido previo del ROOT de Tomcat para evitar basura de compilaciones viejas
-          ssh -i ~/.ssh/staging_key.pem ${{ secrets.STAGING_USER }}@${{ secrets.STAGING_HOST }} "sudo rm -rf /opt/tomcat/webapps/ROOT/*"
-          # Sube los archivos estáticos limpios de la carpeta dist de Vite
-          scp -r -i ~/.ssh/staging_key.pem dist/* ${{ secrets.STAGING_USER }}@${{ secrets.STAGING_HOST }}:/opt/tomcat/webapps/ROOT/
+          ssh -i ~/.ssh/staging_key.pem ${{ secrets.STAGING_USER }}@${{ secrets.STAGING_HOST }} "mkdir -p /home/${{ secrets.STAGING_USER }}/frontend-temp && rm -rf /home/${{ secrets.STAGING_USER }}/frontend-temp/*"
+          scp -r -i ~/.ssh/staging_key.pem dist/* ${{ secrets.STAGING_USER }}@${{ secrets.STAGING_HOST }}:/home/${{ secrets.STAGING_USER }}/frontend-temp/
+
+      # PASO CORREGIDO: Mueve los archivos a Tomcat usando sudo para evitar el 'Permission denied'
+      - name: Deploy to Tomcat ROOT with Sudo Permissions
+        run: |
+          ssh -i ~/.ssh/staging_key.pem ${{ secrets.STAGING_USER }}@${{ secrets.STAGING_HOST }} << 'EOF'
+            sudo rm -rf /opt/tomcat/webapps/ROOT/*
+            sudo cp -r /home/${{ secrets.STAGING_USER }}/frontend-temp/* /opt/tomcat/webapps/ROOT/
+            rm -rf /home/${{ secrets.STAGING_USER }}/frontend-temp
+          EOF
 
   deploy-production:
     name: Deploy to Production (AWS EC2 - Tomcat ROOT)
@@ -68,9 +76,15 @@ jobs:
           chmod 600 ~/.ssh/prod_key.pem
           ssh-keyscan -H ${{ secrets.PROD_HOST }} >> ~/.ssh/known_hosts
 
-      - name: Clean and Copy Static Files to Tomcat ROOT Production
+      - name: Upload Static Files to Temp Directory (Production)
         run: |
-          # Limpia el ROOT de producción de Tomcat
-          ssh -i ~/.ssh/prod_key.pem ${{ secrets.PROD_USER }}@${{ secrets.PROD_HOST }} "sudo rm -rf /opt/tomcat/webapps/ROOT/*"
-          # Sube la compilación final de producción
-          scp -r -i ~/.ssh/prod_key.pem dist/* ${{ secrets.PROD_USER }}@${{ secrets.PROD_HOST }}:/opt/tomcat/webapps/ROOT/
+          ssh -i ~/.ssh/prod_key.pem ${{ secrets.PROD_USER }}@${{ secrets.PROD_HOST }} "mkdir -p /home/${{ secrets.PROD_USER }}/frontend-temp && rm -rf /home/${{ secrets.PROD_USER }}/frontend-temp/*"
+          scp -r -i ~/.ssh/prod_key.pem dist/* ${{ secrets.PROD_USER }}@${{ secrets.PROD_HOST }}:/home/${{ secrets.PROD_USER }}/frontend-temp/
+
+      - name: Deploy to Tomcat ROOT with Sudo Permissions (Production)
+        run: |
+          ssh -i ~/.ssh/prod_key.pem ${{ secrets.PROD_USER }}@${{ secrets.PROD_HOST }} << 'EOF'
+            sudo rm -rf /opt/tomcat/webapps/ROOT/*
+            sudo cp -r /home/${{ secrets.PROD_USER }}/frontend-temp/* /opt/tomcat/webapps/ROOT/
+            rm -rf /home/${{ secrets.PROD_USER }}/frontend-temp
+          EOF
