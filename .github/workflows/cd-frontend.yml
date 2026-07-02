@@ -9,7 +9,7 @@ on:
 
 jobs:
   deploy-staging:
-    name: Deploy to Staging (AWS EC2 Nginx)
+    name: Deploy to Staging (AWS EC2 - Tomcat ROOT)
     if: github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/heads/release/')
     runs-on: ubuntu-latest
     steps:
@@ -34,21 +34,15 @@ jobs:
           chmod 600 ~/.ssh/staging_key.pem
           ssh-keyscan -H ${{ secrets.STAGING_HOST }} >> ~/.ssh/known_hosts
 
-      - name: Copy Static Files to EC2 Staging
+      - name: Clean and Copy Static Files to Tomcat ROOT Staging
         run: |
-          # Limpia/crea carpeta temporal para evitar colisiones y copia los archivos
-          ssh -i ~/.ssh/staging_key.pem ${{ secrets.STAGING_USER }}@${{ secrets.STAGING_HOST }} "mkdir -p /home/${{ secrets.STAGING_USER }}/frontend-staging"
-          scp -r -i ~/.ssh/staging_key.pem dist/* ${{ secrets.STAGING_USER }}@${{ secrets.STAGING_HOST }}:/home/${{ secrets.STAGING_USER }}/frontend-staging/
-
-      - name: Update Nginx and Restart on Staging
-        run: |
-          ssh -i ~/.ssh/staging_key.pem ${{ secrets.STAGING_USER }}@${{ secrets.STAGING_HOST }} << 'EOF'
-            sudo cp -r /home/${{ secrets.STAGING_USER }}/frontend-staging/* /var/www/html/
-            sudo systemctl restart nginx
-          EOF
+          # Limpia el contenido previo del ROOT de Tomcat para evitar basura de compilaciones viejas
+          ssh -i ~/.ssh/staging_key.pem ${{ secrets.STAGING_USER }}@${{ secrets.STAGING_HOST }} "sudo rm -rf /opt/tomcat/webapps/ROOT/*"
+          # Sube los archivos estáticos limpios de la carpeta dist de Vite
+          scp -r -i ~/.ssh/staging_key.pem dist/* ${{ secrets.STAGING_USER }}@${{ secrets.STAGING_HOST }}:/opt/tomcat/webapps/ROOT/
 
   deploy-production:
-    name: Deploy to Production (AWS EC2 Nginx)
+    name: Deploy to Production (AWS EC2 - Tomcat ROOT)
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     environment: production
@@ -74,14 +68,9 @@ jobs:
           chmod 600 ~/.ssh/prod_key.pem
           ssh-keyscan -H ${{ secrets.PROD_HOST }} >> ~/.ssh/known_hosts
 
-      - name: Copy Static Files to EC2 Production
+      - name: Clean and Copy Static Files to Tomcat ROOT Production
         run: |
-          ssh -i ~/.ssh/prod_key.pem ${{ secrets.PROD_USER }}@${{ secrets.PROD_HOST }} "mkdir -p /home/${{ secrets.PROD_USER }}/frontend-prod"
-          scp -r -i ~/.ssh/prod_key.pem dist/* ${{ secrets.PROD_USER }}@${{ secrets.PROD_HOST }}:/home/${{ secrets.PROD_USER }}/frontend-prod/
-
-      - name: Update Nginx and Restart on Production
-        run: |
-          ssh -i ~/.ssh/prod_key.pem ${{ secrets.PROD_USER }}@${{ secrets.PROD_HOST }} << 'EOF'
-            sudo cp -r /home/${{ secrets.PROD_USER }}/frontend-prod/* /var/www/html/
-            sudo systemctl restart nginx
-          EOF
+          # Limpia el ROOT de producción de Tomcat
+          ssh -i ~/.ssh/prod_key.pem ${{ secrets.PROD_USER }}@${{ secrets.PROD_HOST }} "sudo rm -rf /opt/tomcat/webapps/ROOT/*"
+          # Sube la compilación final de producción
+          scp -r -i ~/.ssh/prod_key.pem dist/* ${{ secrets.PROD_USER }}@${{ secrets.PROD_HOST }}:/opt/tomcat/webapps/ROOT/
