@@ -180,11 +180,6 @@ https://github.com/Edward23-ux/backend-ocupacional
 
 Proyecto desarrollado como parte del curso de Ingeniería de Software.
 
-**Autores**
-
-* Edward Campos Heredia
-* Equipo de desarrollo
-
 ---
 
 ## Licencia
