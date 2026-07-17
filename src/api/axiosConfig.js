@@ -2,7 +2,7 @@ import axios from 'axios'
 import { AUTH_STORAGE_KEYS } from '../utils/constants'
 
 // Sanitiza la URL para asegurar que siempre empiece con protocolo http/https
-let rawApiUrl = import.meta.env.VITE_API_URL || '';
+let rawApiUrl = (import.meta.env.VITE_API_URL || '').trim();
 if (rawApiUrl && !rawApiUrl.startsWith('http://') && !rawApiUrl.startsWith('https://')) {
   rawApiUrl = `https://${rawApiUrl}`;
 }
