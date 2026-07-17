@@ -69,12 +69,31 @@ api.interceptors.request.use((config) => {
     config.headers.Authorization = `Bearer ${token}`
   }
 
+  console.log('--- ENVIANDO PETICIÓN ---', {
+    url: config.url,
+    baseURL: config.baseURL,
+    method: config.method,
+  })
+
   return config
+}, (error) => {
+  console.error('--- ERROR EN PETICIÓN REQUEST ---', error)
+  return Promise.reject(error)
 })
 
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    console.log('--- RESPUESTA EXITOSA ---', response.config.url, response.status)
+    return response
+  },
   (error) => {
+    console.error('--- ERROR EN RESPUESTA RESPONSE ---', {
+      message: error?.message,
+      code: error?.code,
+      configUrl: error?.config?.url,
+      configBaseURL: error?.config?.baseURL,
+      errorObj: error,
+    })
     const normalizedError = normalizeApiError(error)
 
     if (normalizedError.status === 401) {
