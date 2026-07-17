@@ -144,7 +144,7 @@ export default function EmpresasPage() {
               <div className="history-list__item" key={item.protocolo.id}>
                 <div>
                   <strong>{item.protocolo.nombre}</strong>
-                  <span>{item.relations.length} especialidades asociadas</span>
+                  <span>{item.relations.length} especialidades asociadass</span>
                 </div>
               </div>
             ))}
