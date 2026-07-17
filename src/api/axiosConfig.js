@@ -1,23 +1,7 @@
 import axios from 'axios'
 import { AUTH_STORAGE_KEYS } from '../utils/constants'
 
-// Sanitiza la URL eliminando comillas accidentales, espacios y barras diagonales finales
-let rawApiUrl = (import.meta.env.VITE_API_URL || '')
-  .replace(/['"]/g, '') // Elimina comillas simples o dobles
-  .trim();
-
-if (rawApiUrl && !rawApiUrl.startsWith('http://') && !rawApiUrl.startsWith('https://')) {
-  rawApiUrl = `https://${rawApiUrl}`;
-}
-
-// Remueve barras diagonales al final si existen
-if (rawApiUrl) {
-  rawApiUrl = rawApiUrl.replace(/\/+$/, '');
-}
-
-const BASE_URL = rawApiUrl
-  ? `${rawApiUrl}/api/`
-  : 'http://localhost:8080/api/';
+const BASE_URL = `${import.meta.env.VITE_API_URL}/api/`
 
 console.log('--- API BASE URL ---', BASE_URL)
 
