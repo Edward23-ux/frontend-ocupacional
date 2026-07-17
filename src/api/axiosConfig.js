@@ -1,10 +1,15 @@
 import axios from 'axios'
 import { AUTH_STORAGE_KEYS } from '../utils/constants'
 
-// Detecta automáticamente si está en Render (Producción) o en tu PC (Local)
-const BASE_URL = import.meta.env.VITE_API_URL
-  ? `${import.meta.env.VITE_API_URL}/api/`
-  : 'http://localhost:8080/api/'
+// Sanitiza la URL para asegurar que siempre empiece con protocolo http/https
+let rawApiUrl = import.meta.env.VITE_API_URL || '';
+if (rawApiUrl && !rawApiUrl.startsWith('http://') && !rawApiUrl.startsWith('https://')) {
+  rawApiUrl = `https://${rawApiUrl}`;
+}
+
+const BASE_URL = rawApiUrl
+  ? `${rawApiUrl}/api/`
+  : 'http://localhost:8080/api/';
 
 console.log('--- API BASE URL ---', BASE_URL)
 
