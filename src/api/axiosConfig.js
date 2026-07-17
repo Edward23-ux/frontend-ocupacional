@@ -1,7 +1,7 @@
 import axios from 'axios'
 import { AUTH_STORAGE_KEYS } from '../utils/constants'
 
-const BASE_URL = `${import.meta.env.VITE_API_URL}/api/`
+const BASE_URL = 'https://backend-ocupacional-docker.onrender.com/api/'
 
 console.log('--- API BASE URL ---', BASE_URL)
 
