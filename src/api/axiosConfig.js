@@ -1,7 +1,10 @@
 import axios from 'axios'
 import { AUTH_STORAGE_KEYS } from '../utils/constants'
 
-const BASE_URL = 'http://18.191.216.54:8080/backend-staging/'
+// Detecta automáticamente si está en Render (Producción) o en tu PC (Local)
+const BASE_URL = import.meta.env.VITE_API_URL
+  ? `${import.meta.env.VITE_API_URL}/api/`
+  : 'http://localhost:8080/api/'
 
 export const api = axios.create({
   baseURL: BASE_URL,

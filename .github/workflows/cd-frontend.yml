@@ -8,9 +8,8 @@ on:
       - 'release/**'
 
 jobs:
-  deploy-staging:
-    name: Deploy to Staging (AWS EC2 - Tomcat ROOT)
-    if: github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/heads/release/')
+  deploy:
+    name: Deploy to Vercel
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -22,69 +21,49 @@ jobs:
           node-version: '20'
           cache: 'npm'
 
-      - name: Install and Build Frontend
-        run: |
-          npm ci
-          npm run build
+      - name: Install Vercel CLI
+        run: npm install --global vercel@latest
 
-      - name: Configure SSH Key
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.STAGING_SSH_PRIVATE_KEY }}" > ~/.ssh/staging_key.pem
-          chmod 600 ~/.ssh/staging_key.pem
-          ssh-keyscan -H ${{ secrets.STAGING_HOST }} >> ~/.ssh/known_hosts
+      # --- DESPLIEGUE A STAGING (PREVIEW) ---
+      - name: Pull Vercel Environment Information (Staging)
+        if: github.ref != 'refs/heads/main'
+        run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
-      # PASO CORREGIDO: Sube temporalmente los archivos a la carpeta del usuario ubuntu
-      - name: Upload Static Files to Temp Directory
-        run: |
-          ssh -i ~/.ssh/staging_key.pem ${{ secrets.STAGING_USER }}@${{ secrets.STAGING_HOST }} "mkdir -p /home/${{ secrets.STAGING_USER }}/frontend-temp && rm -rf /home/${{ secrets.STAGING_USER }}/frontend-temp/*"
-          scp -r -i ~/.ssh/staging_key.pem dist/* ${{ secrets.STAGING_USER }}@${{ secrets.STAGING_HOST }}:/home/${{ secrets.STAGING_USER }}/frontend-temp/
+      - name: Build Project Artifacts (Staging)
+        if: github.ref != 'refs/heads/main'
+        run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
-      # PASO CORREGIDO: Mueve los archivos a Tomcat usando sudo para evitar el 'Permission denied'
-      - name: Deploy to Tomcat ROOT with Sudo Permissions
-        run: |
-          ssh -i ~/.ssh/staging_key.pem ${{ secrets.STAGING_USER }}@${{ secrets.STAGING_HOST }} << 'EOF'
-            sudo rm -rf /opt/tomcat/webapps/ROOT/*
-            sudo cp -r /home/${{ secrets.STAGING_USER }}/frontend-temp/* /opt/tomcat/webapps/ROOT/
-            rm -rf /home/${{ secrets.STAGING_USER }}/frontend-temp
-          EOF
+      - name: Deploy Project Artifacts to Vercel (Staging)
+        if: github.ref != 'refs/heads/main'
+        run: vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
-  deploy-production:
-    name: Deploy to Production (AWS EC2 - Tomcat ROOT)
-    if: github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    environment: production
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
+      # --- DESPLIEGUE A PRODUCCIÓN ---
+      - name: Pull Vercel Environment Information (Production)
+        if: github.ref == 'refs/heads/main'
+        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
+      - name: Build Project Artifacts (Production)
+        if: github.ref == 'refs/heads/main'
+        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
-      - name: Install and Build Frontend
-        run: |
-          npm ci
-          npm run build
-
-      - name: Configure SSH Key
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.PROD_SSH_PRIVATE_KEY }}" > ~/.ssh/prod_key.pem
-          chmod 600 ~/.ssh/prod_key.pem
-          ssh-keyscan -H ${{ secrets.PROD_HOST }} >> ~/.ssh/known_hosts
-
-      - name: Upload Static Files to Temp Directory (Production)
-        run: |
-          ssh -i ~/.ssh/prod_key.pem ${{ secrets.PROD_USER }}@${{ secrets.PROD_HOST }} "mkdir -p /home/${{ secrets.PROD_USER }}/frontend-temp && rm -rf /home/${{ secrets.PROD_USER }}/frontend-temp/*"
-          scp -r -i ~/.ssh/prod_key.pem dist/* ${{ secrets.PROD_USER }}@${{ secrets.PROD_HOST }}:/home/${{ secrets.PROD_USER }}/frontend-temp/
-
-      - name: Deploy to Tomcat ROOT with Sudo Permissions (Production)
-        run: |
-          ssh -i ~/.ssh/prod_key.pem ${{ secrets.PROD_USER }}@${{ secrets.PROD_HOST }} << 'EOF'
-            sudo rm -rf /opt/tomcat/webapps/ROOT/*
-            sudo cp -r /home/${{ secrets.PROD_USER }}/frontend-temp/* /opt/tomcat/webapps/ROOT/
-            rm -rf /home/${{ secrets.PROD_USER }}/frontend-temp
-          EOF
+      - name: Deploy Project Artifacts to Vercel (Production)
+        if: github.ref == 'refs/heads/main'
+        run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
