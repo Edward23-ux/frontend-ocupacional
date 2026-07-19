@@ -72,11 +72,7 @@ export default function PersonalPage() {
       render: (value) => <Badge status="teal">{value}</Badge>,
     },
     { header: 'Colegiatura', accessor: 'numeroColegiatura' },
-    {
-      header: 'Contrato',
-      accessor: (row) => row?.contrato?.nombre ?? '-',
-      render: (value) => <Badge status="indigo">{value}</Badge>,
-    },
+
     {
       header: 'Estado',
       accessor: (row) => (row?.vigente ? 'Activo' : 'Inactivo'),
