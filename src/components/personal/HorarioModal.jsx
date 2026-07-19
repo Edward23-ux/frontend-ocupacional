@@ -8,7 +8,7 @@ import { getHorarios } from '../../api/endpoints/horariosApi.js'
 import toast from 'react-hot-toast'
 
 const getHorarioLabel = (horario) => {
-  const turno = horario?.turno?.nombre ?? 'Sin turno'
+  const turno = horario?.turno?.nombre ?? 'H'
   const inicio = horario?.horaInicio ?? '--:--'
   const fin = horario?.horarioFin ?? '--:--'
   return `${turno} · ${inicio} - ${fin}`
@@ -80,11 +80,6 @@ export default function HorarioModal({ open, personal, onClose }) {
 
   const columns = [
     { header: 'Horario', accessor: (row) => getHorarioLabel(row?.horario) },
-    {
-      header: 'Contrato',
-      accessor: (row) => row?.horario?.contrato?.nombre ?? 'Sin contrato',
-      render: (value) => <Badge status="indigo">{value}</Badge>,
-    },
     {
       header: 'Acciones',
       accessor: 'id',

@@ -37,17 +37,19 @@ const emptyForm = {
   documentoId: '',
   numeroDocumento: '',
   telefono: '',
+  empresaId: '', // 👈 NUEVO CAMPO
 }
 
 export default function PacienteFormModal({
-  open,
-  mode = 'create',
-  patient,
-  documentos = [],
-  saving = false,
-  onClose,
-  onSubmit,
-}) {
+                                            open,
+                                            mode = 'create',
+                                            patient,
+                                            documentos = [],
+                                            empresas = [], // 👈 NUEVA PROPIEDAD RECIBIDA
+                                            saving = false,
+                                            onClose,
+                                            onSubmit,
+                                          }) {
   const [form, setForm] = useState(emptyForm)
   const [errors, setErrors] = useState({})
   const [showPassword, setShowPassword] = useState(false)
@@ -74,6 +76,7 @@ export default function PacienteFormModal({
         documentoId: patient?.documento?.id ?? '',
         numeroDocumento: patient?.numeroDocumento ?? '',
         telefono: patient?.telefono ?? '',
+        empresaId: patient?.empresa?.id ?? '', // 👈 CARGA LA EMPRESA SI EXISTE AL EDITAR
       })
       setErrors({})
       lastAutoEmailRef.current = ''
@@ -81,8 +84,8 @@ export default function PacienteFormModal({
   }, [open, patient])
 
   const selectedDocument = useMemo(
-    () => allowedDocumentos.find((documento) => String(documento.id) === String(form.documentoId)),
-    [allowedDocumentos, form.documentoId],
+      () => allowedDocumentos.find((documento) => String(documento.id) === String(form.documentoId)),
+      [allowedDocumentos, form.documentoId],
   )
 
   const documentRule = getDocumentRule(selectedDocument?.nombre)
@@ -174,6 +177,11 @@ export default function PacienteFormModal({
       nextErrors.contrasena = 'La contraseña es obligatoria.'
     }
 
+    // 👈 VALIDACIÓN DE LA EMPRESA
+    if (!form.empresaId) {
+      nextErrors.empresaId = 'La empresa de procedencia es obligatoria.'
+    }
+
     setErrors(nextErrors)
     return Object.keys(nextErrors).length === 0
   }
@@ -190,132 +198,149 @@ export default function PacienteFormModal({
       documentoId: Number(form.documentoId),
       numeroDocumento: form.numeroDocumento.trim(),
       telefono: form.telefono.trim(),
+      empresaId: form.empresaId ? Number(form.empresaId) : null, // 👈 ENVÍA EL ID DE LA EMPRESA AL BACKEND
     })
   }
 
   return (
-    <Modal
-      open={open}
-      title={mode === 'create' ? 'Nuevo paciente' : 'Editar paciente'}
-      onClose={saving ? undefined : onClose}
-      footer={null}
-    >
-      <form className="stack-form" onSubmit={handleSubmit}>
-        <div className="form-grid form-grid--two">
-          <label className="field">
-            <span>Nombre</span>
-            <input
-              value={form.nombres}
-              onChange={(e) => handleNameChange('nombres', e.target.value)}
-            />
-            {errors.nombres && <span className="field-error">{errors.nombres}</span>}
-          </label>
-
-          <label className="field">
-            <span>Apellido paterno</span>
-            <input
-              value={form.apellidoPaterno}
-              onChange={(e) => handleNameChange('apellidoPaterno', e.target.value)}
-            />
-            {errors.apellidoPaterno && <span className="field-error">{errors.apellidoPaterno}</span>}
-          </label>
-
-          <label className="field">
-            <span>Apellido materno</span>
-            <input
-              value={form.apellidoMaterno}
-              onChange={(e) => handleNameChange('apellidoMaterno', e.target.value)}
-            />
-            {errors.apellidoMaterno && <span className="field-error">{errors.apellidoMaterno}</span>}
-          </label>
-
-          <label className="field">
-            <span>Correo corporativo</span>
-            <input
-              type="email"
-              value={form.correoCoorporativo}
-              onChange={(e) => setForm(prev => ({ ...prev, correoCoorporativo: e.target.value }))}
-            />
-            {errors.correoCoorporativo && <span className="field-error">{errors.correoCoorporativo}</span>}
-          </label>
-
-          {mode === 'create' && (
+      <Modal
+          open={open}
+          title={mode === 'create' ? 'Nuevo paciente' : 'Editar paciente'}
+          onClose={saving ? undefined : onClose}
+          footer={null}
+      >
+        <form className="stack-form" onSubmit={handleSubmit}>
+          <div className="form-grid form-grid--two">
             <label className="field">
-              <span>Contraseña</span>
-              <div className="password-field">
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  value={form.contrasena}
-                  onChange={(e) => setForm(prev => ({ ...prev, contrasena: e.target.value }))}
-                  placeholder="••••••••"
-                  autoComplete="new-password"
-                />
-                <button
-                  type="button"
-                  className="password-toggle"
-                  onClick={() => setShowPassword(prev => !prev)}
-                  aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-                >
-                  {showPassword ? <FiEyeOff /> : <FiEye />}
-                </button>
-              </div>
-              {errors.contrasena && <span className="field-error">{errors.contrasena}</span>}
+              <span>Nombre *</span>
+              <input
+                  value={form.nombres}
+                  onChange={(e) => handleNameChange('nombres', e.target.value)}
+              />
+              {errors.nombres && <span className="field-error">{errors.nombres}</span>}
             </label>
-          )}
 
-          <label className="field">
-            <span>Tipo documento</span>
-            <select
-              value={form.documentoId}
-              onChange={(e) => setForm(prev => ({ ...prev, documentoId: e.target.value, numeroDocumento: '' }))}
-            >
-              <option value="">Seleccione...</option>
-              {allowedDocumentos.map((documento) => (
-                <option key={documento.id} value={documento.id}>
-                  {documento.nombre}
-                </option>
-              ))}
-            </select>
-            {errors.documentoId && <span className="field-error">{errors.documentoId}</span>}
-          </label>
+            <label className="field">
+              <span>Apellido paterno *</span>
+              <input
+                  value={form.apellidoPaterno}
+                  onChange={(e) => handleNameChange('apellidoPaterno', e.target.value)}
+              />
+              {errors.apellidoPaterno && <span className="field-error">{errors.apellidoPaterno}</span>}
+            </label>
 
-          <label className="field">
-            <span>N° documento</span>
-            <input
-              value={form.numeroDocumento}
-              onChange={(e) => handleDocumentNumberChange(e.target.value)}
-              maxLength={documentRule.max}
-              inputMode="numeric"
-              style={{ width: '100%' }}
-            />
-            <small className="field-hint">{documentRule.label}</small>
-            {errors.numeroDocumento && <span className="field-error">{errors.numeroDocumento}</span>}
-          </label>
+            <label className="field">
+              <span>Apellido materno</span>
+              <input
+                  value={form.apellidoMaterno}
+                  onChange={(e) => handleNameChange('apellidoMaterno', e.target.value)}
+              />
+              {errors.apellidoMaterno && <span className="field-error">{errors.apellidoMaterno}</span>}
+            </label>
 
-          <label className="field">
-            <span>Teléfono</span>
-            <input
-              value={form.telefono}
-              onChange={(e) => handlePhoneChange(e.target.value)}
-              maxLength={9}
-              inputMode="numeric"
-              style={{ width: '100%' }}
-            />
-            {/* 👇 Mismo hint para igualar altura visual */}
-            <small className="field-hint">9 dígitos</small>
-            {errors.telefono && <span className="field-error">{errors.telefono}</span>}
-          </label>
-        </div>
+            <label className="field">
+              <span>Correo corporativo *</span>
+              <input
+                  type="email"
+                  value={form.correoCoorporativo}
+                  onChange={(e) => setForm(prev => ({ ...prev, correoCoorporativo: e.target.value }))}
+              />
+              {errors.correoCoorporativo && <span className="field-error">{errors.correoCoorporativo}</span>}
+            </label>
 
-        <div className="form-actions">
-          <Button variant="outline" onClick={onClose} disabled={saving}>
-            Cancelar
-          </Button>
-          <Button type="submit" loading={saving}>
-            Guardar
-          </Button>
-        </div>
-      </form>
-    </Modal>
+            {mode === 'create' && (
+                <label className="field">
+                  <span>Contraseña *</span>
+                  <div className="password-field">
+                    <input
+                        type={showPassword ? 'text' : 'password'}
+                        value={form.contrasena}
+                        onChange={(e) => setForm(prev => ({ ...prev, contrasena: e.target.value }))}
+                        placeholder="••••••••"
+                        autoComplete="new-password"
+                    />
+                    <button
+                        type="button"
+                        className="password-toggle"
+                        onClick={() => setShowPassword(prev => !prev)}
+                        aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                    >
+                      {showPassword ? <FiEyeOff /> : <FiEye />}
+                    </button>
+                  </div>
+                  {errors.contrasena && <span className="field-error">{errors.contrasena}</span>}
+                </label>
+            )}
+
+            <label className="field">
+              <span>Tipo documento *</span>
+              <select
+                  value={form.documentoId}
+                  onChange={(e) => setForm(prev => ({ ...prev, documentoId: e.target.value, numeroDocumento: '' }))}
+              >
+                <option value="">Seleccione...</option>
+                {allowedDocumentos.map((documento) => (
+                    <option key={documento.id} value={documento.id}>
+                      {documento.nombre}
+                    </option>
+                ))}
+              </select>
+              {errors.documentoId && <span className="field-error">{errors.documentoId}</span>}
+            </label>
+
+            <label className="field">
+              <span>N° documento *</span>
+              <input
+                  value={form.numeroDocumento}
+                  onChange={(e) => handleDocumentNumberChange(e.target.value)}
+                  maxLength={documentRule.max}
+                  inputMode="numeric"
+                  style={{ width: '100%' }}
+              />
+              <small className="field-hint">{documentRule.label}</small>
+              {errors.numeroDocumento && <span className="field-error">{errors.numeroDocumento}</span>}
+            </label>
+
+            <label className="field">
+              <span>Teléfono *</span>
+              <input
+                  value={form.telefono}
+                  onChange={(e) => handlePhoneChange(e.target.value)}
+                  maxLength={9}
+                  inputMode="numeric"
+                  style={{ width: '100%' }}
+              />
+              <small className="field-hint">9 dígitos</small>
+              {errors.telefono && <span className="field-error">{errors.telefono}</span>}
+            </label>
+
+            {/* 👇 NUEVO ELEMENTO SELECT DE EMPRESAS */}
+            <label className="field" style={{ gridColumn: 'span 2' }}>
+              <span>Empresa de Procedencia *</span>
+              <select
+                  value={form.empresaId}
+                  onChange={(e) => setForm(prev => ({ ...prev, empresaId: e.target.value }))}
+              >
+                <option value="">Seleccione la empresa...</option>
+                {empresas.map((emp) => (
+                    <option key={emp.id} value={emp.id}>
+                      {emp.nombre} {emp.razonSocial ? `- ${emp.razonSocial}` : ''}
+                    </option>
+                ))}
+              </select>
+              {errors.empresaId && <span className="field-error">{errors.empresaId}</span>}
+            </label>
+          </div>
+
+          <div className="form-actions">
+            <Button variant="outline" onClick={onClose} disabled={saving}>
+              Cancelar
+            </Button>
+            <Button type="submit" loading={saving}>
+              Guardar
+            </Button>
+          </div>
+        </form>
+      </Modal>
   )
 }

@@ -232,9 +232,6 @@ export default function ConsultaDetallePage() {
             <h2>🩺 Detalle de consulta</h2>
             <p>Detalle clínico asociado a esta consulta.</p>
           </div>
-          <Button icon={<FiPlus />} onClick={() => setOpenModal(true)}>
-            Agregar detalle de consulta
-          </Button>
         </div>
 
         {loadingDetalles ? (
@@ -244,7 +241,7 @@ export default function ConsultaDetallePage() {
             columns={detalleColumns}
             data={detalleConsultas}
             pageSize={5}
-            searchPlaceholder="Buscar detalle..."
+            showSearch={false}
             emptyMessage="No hay detalles de consulta registrados"
           />
         )}

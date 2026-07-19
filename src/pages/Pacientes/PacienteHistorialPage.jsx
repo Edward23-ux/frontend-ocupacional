@@ -57,7 +57,7 @@ export default function PacienteHistorialPage() {
   const consultasColumns = useMemo(
     () => [
       { header: 'Fecha', accessor: (row) => formatDate(row?.fechaConsulta) },
-      { header: 'Protocolo', accessor: (row) => row?.protocolo?.nombre ?? '-' },
+
       {
         header: 'Estado',
         accessor: (row) => row?.estado?.nombre ?? '-',
