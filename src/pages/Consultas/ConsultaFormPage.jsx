@@ -194,7 +194,7 @@ export default function ConsultaFormPage() {
     <main className="page-shell page-shell--form">
       <header className="page-toolbar">
         <div>
-          <span className="page-eyebrow">Consultas</span>
+          <span className="page-eyebrow">Consultas Principal</span>
           <h1 className="page-title">{isEditMode ? 'Editar Consulta' : 'Nueva Consulta'}</h1>
         </div>
         <Button variant="outline" icon={<FiArrowLeft />} onClick={() => navigate(ROUTES.consultas)}>
