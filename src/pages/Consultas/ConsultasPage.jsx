@@ -72,11 +72,11 @@ export default function ConsultasPage() {
       header: 'Paciente',
       accessor: (row) => getPacienteName(row),
       render: (value, row) => (
-            <div className="person-cell">
-              <Avatar name={value} />
-              <strong>{value || 'Sin nombre'}</strong>
-            </div>
-          ),
+        <div className="person-cell">
+          <Avatar name={value} />
+          <strong>{value || 'Sin nombre'}</strong>
+        </div>
+      ),
     },
     {
       header: 'Fecha',
